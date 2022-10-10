@@ -1,6 +1,11 @@
-# Version: Mention the Required Version of Terraform and all the Resource 
+$$
+\bigstar \textcolor{purple}{Web ~App ~with ~Azure ~SLB }
+$$
 
-```yaml
+# Terraform Block (Version)
+### Mention the Required Version of Terraform and all the Resource 
+
+```hcl
 # Terraform Block
 terraform {
   required_version = ">= 1.0.0"
@@ -26,8 +31,9 @@ provider "azurerm" {
 }
 ```
 #
-# Random String Resource for Unique Naming
-```yaml
+# Random Resource
+### Random String Resource for Unique Naming
+```hcl
 resource "random_string" "myrandom" {
   length = 6
   upper = false 
@@ -36,8 +42,9 @@ resource "random_string" "myrandom" {
 }
 ```
 #
-## Generic Input Variables
-```yaml
+# Declaring Variables
+### Generic Input Variables
+```hcl
 # Business Division
 variable "business_divsion" {
   description = "Business Division in the large organization this Infrastructure belongs"
@@ -51,8 +58,8 @@ variable "environment" {
   default = "dev"
 }
 ```
-## Resource Group Input Variables
-```yaml
+### Resource Group Input Variables
+```hcl
 # Azure Resource Group Name 
 variable "resource_group_name" {
   description = "Resource Group Name"
@@ -68,8 +75,9 @@ variable "resource_group_location" {
 }
 ```
 #
+# Locals
 ## Define Local Values in Terraform. It is only for ease of good naming practices
-```yaml
+```hcl
 locals {
   owners = var.business_divsion
   environment = var.environment
@@ -82,8 +90,8 @@ locals {
 } 
 ```
 #
-# Resource-1: Azure Resource Group
-```yaml
+# Azure Resource Group
+```hcl
 resource "azurerm_resource_group" "rg" {
   # name = "${local.resource_name_prefix}-${var.resource_group_name}"
   name = "${local.resource_name_prefix}-${var.resource_group_name}-${random_string.myrandom.id}"
@@ -92,8 +100,9 @@ resource "azurerm_resource_group" "rg" {
 }
 ```
 #
-## Virtual Network variable
-```yaml
+# Virtual Network
+### Virtual Network variable
+```hcl
 ## Virtual Network
 variable "vnet_name" {
   description = "Virtual Network name"
@@ -107,8 +116,8 @@ variable "vnet_address_space" {
 }
 ```
 
-## Subnets and Subnet NSG's variable
-```yaml
+### Subnets and Subnet NSG's variable
+```hcl
 # Web Subnet Name
 variable "web_subnet_name" {
   description = "Virtual Network Web Subnet Name"
@@ -163,7 +172,7 @@ variable "bastion_subnet_address" {
 ```
 #
 # Create Virtual Network
-```yaml
+```hcl
 resource "azurerm_virtual_network" "vnet" {
   name                = "${local.resource_name_prefix}-${var.vnet_name}"
   #Virtual Network variable & Local Variable
@@ -179,7 +188,7 @@ resource "azurerm_virtual_network" "vnet" {
 ```
 #
 # Resource-1: Create WebTier Subnet
-```yaml
+```hcl
 resource "azurerm_subnet" "websubnet" {
   name                 = "${azurerm_virtual_network.vnet.name}-${var.web_subnet_name}"
   # Create Virtual Network & Subnets and Subnet NSG's variable
@@ -193,7 +202,7 @@ resource "azurerm_subnet" "websubnet" {
 ```
 
 # Resource-2: Create Network Security Group (NSG)
-```yaml
+```hcl
 resource "azurerm_network_security_group" "web_subnet_nsg" {
   name                = "${azurerm_subnet.websubnet.name}-nsg"
   location            = azurerm_resource_group.rg.location
@@ -202,7 +211,7 @@ resource "azurerm_network_security_group" "web_subnet_nsg" {
 ```
 
 # Resource-3: Create NSG Rules
-```yaml
+```hcl
 ## Locals Block for Security Rules
 locals {
   web_inbound_ports_map = {
@@ -230,7 +239,7 @@ resource "azurerm_network_security_rule" "web_nsg_rule_inbound" {
 ```
 
 # Resource-4: Associate NSG and Subnet
-```yaml
+```hcl
 resource "azurerm_subnet_network_security_group_association" "web_subnet_nsg_associate" {
   depends_on = [ azurerm_network_security_rule.web_nsg_rule_inbound]
   # Every NSG Rule Association will disassociate NSG from Subnet and Associate it, so we associate it only after NSG is completely created - Azure Provider Bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/354  
@@ -240,7 +249,7 @@ resource "azurerm_subnet_network_security_group_association" "web_subnet_nsg_ass
 ```
 #
 # Resource-1: Create AppTier Subnet
-```yaml
+```hcl
 resource "azurerm_subnet" "appsubnet" {
   name                 = "${azurerm_virtual_network.vnet.name}-${var.app_subnet_name}"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -250,7 +259,7 @@ resource "azurerm_subnet" "appsubnet" {
 }
 ```
 # Resource-2: Create Network Security Group (NSG)
-```yaml
+```hcl
 resource "azurerm_network_security_group" "app_subnet_nsg" {
   name                = "${azurerm_subnet.appsubnet.name}-nsg"
   location            = azurerm_resource_group.rg.location
@@ -258,7 +267,7 @@ resource "azurerm_network_security_group" "app_subnet_nsg" {
 }
 ```
 # Resource-3: Create NSG Rules
-```yaml
+```hcl
 ## Locals Block for Security Rules
 locals {
   app_inbound_ports_map = {
@@ -285,7 +294,7 @@ resource "azurerm_network_security_rule" "app_nsg_rule_inbound" {
 }
 ```
 # Resource-4: Associate NSG and Subnet
-```yaml
+```hcl
 resource "azurerm_subnet_network_security_group_association" "app_subnet_nsg_associate" {
   depends_on = [ azurerm_network_security_rule.app_nsg_rule_inbound]  
   subnet_id                 = azurerm_subnet.appsubnet.id
@@ -294,7 +303,7 @@ resource "azurerm_subnet_network_security_group_association" "app_subnet_nsg_ass
 ```
 #
 # Resource-1: Create DBTier Subnet
-```yaml
+```hcl
 resource "azurerm_subnet" "dbsubnet" {
   name                 = "${azurerm_virtual_network.vnet.name}-${var.db_subnet_name}"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -303,7 +312,7 @@ resource "azurerm_subnet" "dbsubnet" {
 }
 ```
 # Resource-2: Create Network Security Group (NSG)
-```yaml
+```hcl
 resource "azurerm_network_security_group" "db_subnet_nsg" {
   name                = "${azurerm_subnet.dbsubnet.name}-nsg"
   location            = azurerm_resource_group.rg.location
@@ -312,7 +321,7 @@ resource "azurerm_network_security_group" "db_subnet_nsg" {
 ```
 
 # Resource-3: Create NSG Rules
-```yaml
+```hcl
 ## Locals Block for Security Rules
 locals {
   db_inbound_ports_map = {
@@ -338,7 +347,7 @@ resource "azurerm_network_security_rule" "db_nsg_rule_inbound" {
 }
 ```
 # Resource-4: Associate NSG and Subnet
-```yaml
+```hcl
 resource "azurerm_subnet_network_security_group_association" "db_subnet_nsg_associate" {
   depends_on = [ azurerm_network_security_rule.db_nsg_rule_inbound]  
   subnet_id                 = azurerm_subnet.dbsubnet.id
@@ -347,7 +356,7 @@ resource "azurerm_subnet_network_security_group_association" "db_subnet_nsg_asso
 ```
 #
 # Resource-1: Create Bastion / Management Subnet
-```yaml
+```hcl
 resource "azurerm_subnet" "bastionsubnet" {
   name                 = "${azurerm_virtual_network.vnet.name}-${var.bastion_subnet_name}"  
   resource_group_name  = azurerm_resource_group.rg.name
@@ -356,7 +365,7 @@ resource "azurerm_subnet" "bastionsubnet" {
 }
 ```
 # Resource-2: Create Network Security Group (NSG)
-```yaml
+```hcl
 resource "azurerm_network_security_group" "bastion_subnet_nsg" {
   name                = "${azurerm_subnet.bastionsubnet.name}-nsg"
   location            = azurerm_resource_group.rg.location
@@ -364,7 +373,7 @@ resource "azurerm_network_security_group" "bastion_subnet_nsg" {
 }
 ```
 # Resource-4: Create NSG Rules
-```yaml
+```hcl
 ## Locals Block for Security Rules
 locals {
   bastion_inbound_ports_map = {
@@ -389,7 +398,7 @@ resource "azurerm_network_security_rule" "bastion_nsg_rule_inbound" {
 }
 ```
 # Resource-4: Associate NSG and Subnet
-```yaml
+```hcl
 resource "azurerm_subnet_network_security_group_association" "bastion_subnet_nsg_associate" {
   depends_on = [ azurerm_network_security_rule.bastion_nsg_rule_inbound]    
   subnet_id                 = azurerm_subnet.bastionsubnet.id
@@ -398,7 +407,7 @@ resource "azurerm_subnet_network_security_group_association" "bastion_subnet_nsg
 ```
 #
 # Virtual Network Outputs
-```yaml
+```hcl
 ## Virtual Network Name
 output "virtual_network_name" {
   description = "Virtual Network Name"
@@ -438,7 +447,7 @@ output "web_subnet_nsg_id" {
 ```
 # Linux VM Input Variables Placeholder file.
 ## Web Linux VM Instance Count
-```yaml
+```hcl
 variable "web_linuxvm_instance_count" {
   description = "Web Linux VM Instance Count"
   type = map(string)
@@ -450,7 +459,7 @@ variable "web_linuxvm_instance_count" {
 ```
 #
 # Resource-1: Create Public IP Address for VM (Not Required as we will add Loadbalancer in further step)
-```yaml
+```hcl
 resource "azurerm_public_ip" "web_linuxvm_publicip" {
   name                = "${local.resource_name_prefix}-web-linuxvm-publicip"
   resource_group_name = azurerm_resource_group.rg.name
@@ -462,7 +471,7 @@ resource "azurerm_public_ip" "web_linuxvm_publicip" {
 ```
 #
 # Resource-2: Create Network Interface
-```yaml
+```hcl
 resource "azurerm_network_interface" "web_linuxvm_nic" {
   for_each = var.web_linuxvm_instance_count
   name                = "${local.resource_name_prefix}-web-linuxvm-nic-${each.key}"
@@ -480,7 +489,7 @@ resource "azurerm_network_interface" "web_linuxvm_nic" {
 #
 ## Not Required. Additional layer Security to the VMs level (Not at Vnet level)
 # Resource-3 (Optional): Create Network Security Group and Associate to Linux VM Network Interface (Same as )
-```yaml
+```hcl
 # Resource-1: Create Network Security Group (NSG)
 resource "azurerm_network_security_group" "web_vmnic_nsg" {
   name                = "${azurerm_network_interface.web_linuxvm_nic.name}-nsg"
@@ -546,7 +555,7 @@ CUSTOM_DATA
 ```
 
 ## Resource: Azure Linux Virtual Machine
-```yaml
+```hcl
 resource "azurerm_linux_virtual_machine" "web_linuxvm" {
   for_each = var.web_linuxvm_instance_count
   name = "${local.resource_name_prefix}-web-linuxvm-${each.key}"
@@ -577,7 +586,7 @@ resource "azurerm_linux_virtual_machine" "web_linuxvm" {
 ```
 #
 # Different Outputs with Terraform For Loops
-```yaml
+```hcl
 # Output List - Single Input to for loop
 output "web_linuxvm_private_ip_address_list" {
   description = "Web Linux Virtual Machine Private IP"
@@ -619,7 +628,7 @@ output "web_linuxvm_network_interface_id_map" {
 ```
 #
 # Bastion Host Linux VM
-```yaml
+```hcl
 # Resource-1: Create Public IP Address
 resource "azurerm_public_ip" "bastion_host_publicip" {
   name                = "${local.resource_name_prefix}-bastion-host-publicip"
@@ -672,7 +681,7 @@ resource "azurerm_linux_virtual_machine" "bastion_host_linuxvm" {
 
 #
 # Move-ssh-key-to-bastion-host
-```yaml
+```hcl
 # Create a Null Resource and Provisioners
 resource "null_resource" "name" {
   depends_on = [azurerm_linux_virtual_machine.bastion_host_linuxvm]
@@ -702,7 +711,7 @@ resource "null_resource" "name" {
 
 #
 ## Bastion Host Public IP Output
-```yaml
+```hcl
 output "bastion_host_linuxvm_public_ip_address" {
   description = "Bastion Host Linux VM Public Address"
   value = azurerm_public_ip.bastion_host_publicip.ip_address
@@ -713,7 +722,7 @@ output "bastion_host_linuxvm_public_ip_address" {
 #
 # OPTIONAL AZURE BASTION SERVICES (As we use Direct Bastion Servers for the same)
 ## Optional variables file.
-```yaml
+```hcl
 variable "bastion_service_subnet_name" {
   description = "Bastion Service Subnet Name"
   default = "AzureBastionSubnet"
@@ -726,7 +735,7 @@ variable "bastion_service_address_prefixes" {
 ```
 
 # Azure Bastion Service - Resources [If required]
-```yaml
+```hcl
 ## Resource-1: Azure Bastion Subnet
 resource "azurerm_subnet" "bastion_service_subnet" {
   name                 = var.bastion_service_subnet_name
@@ -760,7 +769,7 @@ resource "azurerm_bastion_host" "bastion_host" {
 #
 # AZURE LOAD BALANCER
 ## Resource-1: Create Public IP Address for Azure Load Balancer
-```yaml
+```hcl
 resource "azurerm_public_ip" "web_lbpublicip" {
   name                = "${local.resource_name_prefix}-lbpublicip"
   resource_group_name = azurerm_resource_group.rg.name
@@ -772,7 +781,7 @@ resource "azurerm_public_ip" "web_lbpublicip" {
 ```
 
 ## Resource-2: Create Azure Standard Load Balancer (Network)
-```yaml
+```hcl
 resource "azurerm_lb" "web_lb" {
   name                = "${local.resource_name_prefix}-web-lb"
   location            = azurerm_resource_group.rg.location
@@ -785,7 +794,7 @@ resource "azurerm_lb" "web_lb" {
 }
 ```
 ## Resource-3: Create LB Backend Pool
-```yaml
+```hcl
 resource "azurerm_lb_backend_address_pool" "web_lb_backend_address_pool" {
   name                = "web-backend"
   loadbalancer_id     = azurerm_lb.web_lb.id
@@ -793,7 +802,7 @@ resource "azurerm_lb_backend_address_pool" "web_lb_backend_address_pool" {
 ```
 ## Resource-6: Associate Network Interface and Standard Load Balancer
 ### https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface_backend_address_pool_association
-```yaml
+```hcl
 resource "azurerm_network_interface_backend_address_pool_association" "web_nic_lb_associate" {
   for_each = var.web_linuxvm_instance_count
   network_interface_id    = azurerm_network_interface.web_linuxvm_nic[each.key].id
@@ -803,7 +812,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "web_nic_l
 ```
 
 ## Resource-4: Create LB Probe
-```yaml
+```hcl
 resource "azurerm_lb_probe" "web_lb_probe" {
   name                = "tcp-probe"
   protocol            = "Tcp"
@@ -813,7 +822,7 @@ resource "azurerm_lb_probe" "web_lb_probe" {
 }
 ```
 ## Resource-5: Create LB Rule
-```yaml
+```hcl
 resource "azurerm_lb_rule" "web_lb_rule_app1" {
   name                           = "web-app1-rule"
   protocol                       = "Tcp"
@@ -828,7 +837,7 @@ resource "azurerm_lb_rule" "web_lb_rule_app1" {
 ```
 #
 # Web LoadBalancer Output
-```yaml
+```hcl
 # LB Public IP
 output "web_lb_public_ip_address" {
   description = "Web Load Balancer Public Address"
@@ -849,7 +858,7 @@ output "web_lb_frontend_ip_configuration" {
 ```
 #
 # Azure LB Inbound NAT Rule
-```yaml
+```hcl
 resource "azurerm_lb_nat_rule" "web_lb_inbound_nat_rule_22" {
   depends_on = [azurerm_linux_virtual_machine.web_linuxvm  ] # To effectively handle azurerm provider related dependency bugs during the destroy resources time
   for_each = var.web_linuxvm_instance_count
@@ -864,7 +873,7 @@ resource "azurerm_lb_nat_rule" "web_lb_inbound_nat_rule_22" {
 }
 ```
 # Associate LB NAT Rule and VM Network Interface
-```yaml
+```hcl
 resource "azurerm_network_interface_nat_rule_association" "web_nic_nat_rule_associate" {
   for_each = var.web_linuxvm_instance_count
   network_interface_id =  azurerm_network_interface.web_linuxvm_nic[each.key].id 
@@ -875,7 +884,7 @@ resource "azurerm_network_interface_nat_rule_association" "web_nic_nat_rule_asso
 
 #
 # terraform.tfvars
-```yaml
+```hcl
 business_divsion = "hr"
 environment = "dev"
 resource_group_name = "rg"
