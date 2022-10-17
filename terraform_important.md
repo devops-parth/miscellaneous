@@ -285,7 +285,6 @@ resource "azurerm_linux_virtual_machine" "web_linuxvm" {
 ```
 
 # Type 3
-# Linux VM Input Variables Placeholder file.
 ```hcl
 variable "web_vmss_nsg_inbound_ports" {
   description = "Web VMSS NSG Inbound Ports"
