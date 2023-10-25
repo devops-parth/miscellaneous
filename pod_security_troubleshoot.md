@@ -80,3 +80,6 @@ metadata:
 
 
 
+
+
+AZURE POD POLICIES: https://learn.microsoft.com/en-us/azure/aks/use-pod-security-policies
