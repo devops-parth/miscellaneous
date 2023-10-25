@@ -1,2 +1,1 @@
-# miscellaneous
-Contains miscellaneous files
+# Interview Questions & Answers
